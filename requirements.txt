@@ -1,0 +1,14 @@
+PyJWT==0.1.2
+asyncmongo==1.2.1
+gunicorn==0.14.6
+httplib2==0.7.4
+pycurl==7.19.0
+pymongo==2.2
+python-dateutil==2.1
+pytz==2012d
+simplejson==2.5.2
+six==1.1.0
+tornado==2.2.1
+tornadomail==0.1.2
+twilio==3.3.10
+wsgiref==0.1.2
