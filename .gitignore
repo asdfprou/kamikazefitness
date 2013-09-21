@@ -16,3 +16,4 @@
 /tmp
 
 /vendor/*
+/config/local_env.yml
