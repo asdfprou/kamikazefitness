@@ -19,12 +19,13 @@
         <link rel="stylesheet" href="static/css/main.css">
         <script src="static/js/vendor/modernizr-2.6.2.min.js"></script>
 
-        <!-- d3 -->
-        <script src="http://d3js.org/d3.v2.js"></script>
-
         <!-- Angular -->
         <script src="static/js/vendor/angular.min.js"></script>
         <script src="static/js/leaderboard.js"></script>
+
+        <!-- d3 -->
+        <script src="http://d3js.org/d3.v3.js"></script>
+        <script src="static/js/vendor/angular-d3.js"></script>
 
         <!-- Underscore and Moment -->
         <script src="static/js/vendor/underscore-min.js"></script>
@@ -39,10 +40,10 @@
 
         <div ng-app="leaderboard" id="wrapper">
             <header>WEEKEND FITNESS CLUB</header>
-
             <div id="leaderboard" ng-ctrl="LBoardCtrl">
                 <h3> Fitness Leaderboards</h3>
 
+                <div id="chart"></div>
                 <gh-visualization val="data"></gh-visualization>
             </div>
 
@@ -52,6 +53,5 @@
         <script>window.jQuery || document.write('<script src="static/js/vendor/jquery-1.9.1.min.js"><\/script>')</script>
         <script src="static/js/plugins.js"></script>
         <script src="static/js/main.js"></script>
-
     </body>
 </html>

@@ -101,6 +101,7 @@ body {
     text-rendering: optimizeLegibility;
 }
 
+/*
 rect.bordered {
     stroke: #E6E6E6;
     stroke-width:2px;
@@ -115,16 +116,46 @@ text.mono {
 text.axis {
     fill: #000;
 }
+*/
 
+rect.bordered {
+  stroke: #E6E6E6;
+  stroke-width:2px;   
+}
+
+text.mono {
+  font-size: 9pt;
+  font-family: Consolas, courier;
+  fill: #aaa;
+}
+
+text.axis-workweek {
+  fill: #000;
+}
+
+text.axis-worktime {
+  fill: #000;
+}
+
+#leaderboard svg {
+  display: block;
+  margin: 30px auto;
+}
+
+#leaderboard h3 {
+  display: block;
+  text-align: center;
+  color: #999;
+}
+      
 #wrapper {
-    background-color: rgba(133, 133, 133, .5);
+    background-color: rgba(133, 133, 133, .2);
     height: 100%;
     width: 70%;
     margin: 0 auto;
 }
 
 header {
-    color: #DDD;
     text-align: center;
     padding: 10px;
     margin: 0 auto;
