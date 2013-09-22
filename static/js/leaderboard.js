@@ -2,6 +2,10 @@ var leaderboardApp = angular.module('leaderboard', ['angular-underscore/filters'
 
 leaderboardApp.controller('LBoardCtrl', function LBoardCtrl($scope, $http) {
     // helper for formatting date
+    var getActivityValue = function (date) {
+      // Need to fill in to determine colour of cell after a certain ate
+    }
+
     $scope.getUsers = function (cb) {
         $http({
             method: 'GET',
@@ -26,10 +30,13 @@ leaderboardApp.controller('LBoardCtrl', function LBoardCtrl($scope, $http) {
             method: 'GET',
             url: '/activity'
         }).
-        success(function (data) {
-
+        success(function (activities) {
+           $scope.data = _.map(activities, function(activity) {
+             activity['day'] = moment(activity['day']).format("dddd");
+             activity['value'] = 1;
+           });
         }).
-        error(function (data, status) {
+        error(function (activities, status) {
             if (status === 404) {
                 $scope.error = 'No activities to be found here!';
             } else {

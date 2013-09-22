@@ -301,6 +301,7 @@ class UpdateHandler(BaseHandler):
 class ActivityHandler(BaseHandler):
     @tornado.web.asynchronous
     def get(self):
+        # only get activities from THIS week
         self.db.activities.find({}, callback=self._on_find)
 
     def _on_find(self, response = False, error = False):
