@@ -104,7 +104,7 @@ class BaseHandler(tornado.web.RequestHandler):
     @property
     def db(self):
         if not hasattr(self, '_db'):
-            self._db = asyncmongo.Client(pool_id='test_pool', host='', port=, dbuser="", dbpass="", dbname="", maxcached=10, maxconnections=1000)
+            self._db = asyncmongo.Client(pool_id='test_pool', host='', port=27017, dbuser="", dbpass="", dbname="", maxcached=10, maxconnections=1000)
         return self._db
 
     @property
