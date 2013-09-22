@@ -58,7 +58,7 @@ define("port", default=8888, help="run on the given port", type=int)
 # MongoDB
 # =======================================================================
 # ADD YOUR MONGO COMMAND HERE TO COPY INTO THE TERMINAL FOR EASY ACCESS (Copy from MongoHQ admin tab)
-
+# mongo paulo.mongohq.com:10005/app18253122 -u <user> -p<password>
 # Pusher credentials
 
 class Application(tornado.web.Application):
@@ -100,11 +100,10 @@ class BaseHandler(tornado.web.RequestHandler):
         self.write(tornado.escape.json_encode(self.response))
         print tornado.escape.json_encode(self.response)
         self.finish()
-
     @property
     def db(self):
         if not hasattr(self, '_db'):
-            self._db = asyncmongo.Client(pool_id='test_pool', host='', port=27017, dbuser="", dbpass="", dbname="", maxcached=10, maxconnections=1000)
+            self._db = asyncmongo.Client(pool_id='test_pool', host='paulo.mongohq.com', port=10005, dbuser="heroku", dbpass="hello!", dbname="app18253122", maxcached=10, maxconnections=1000)
         return self._db
 
     @property
