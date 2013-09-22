@@ -72,6 +72,7 @@ class Application(tornado.web.Application):
             (r"/logout", LogoutHandler),
             (r"/test", TestHandler),
             (r"/update", UpdateHandler),
+            (r"/activity", ActivityHandler),
             (r"/user", UserHandler)
         ]
         settings = dict(
@@ -296,6 +297,23 @@ class UpdateHandler(BaseHandler):
     def _on_finish(self, response = False, error = False):
         self.write("Finished updating")
         self.finish()
+
+class ActivityHandler(BaseHandler):
+    @tornado.web.asynchronous
+    def get(self):
+        # only get activities from THIS week
+        self.db.activities.find({}, callback=self._on_find)
+
+    def _on_find(self, response = False, error = False):
+        if error:
+            print "ERROR"
+            print error
+        else:
+            for obj in response:
+                if '_id' in obj:
+                    del obj['_id']
+            self.write(tornado.escape.json_encode({"data": response}))
+            self.finish()
 
 class UserHandler(BaseHandler):
     @tornado.web.asynchronous
