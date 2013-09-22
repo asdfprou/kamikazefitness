@@ -16,7 +16,7 @@ leaderboardApp.controller('LBoardCtrl', function LBoardCtrl ($scope, $http) {
             url: '/user/findAll'
         }).
         success(function (data) {
-            $scope.data = data;
+            $scope.users = JSON.parse(data);
             $scope.error = '';
         }).
         error(function (data, status) {
@@ -31,202 +31,84 @@ leaderboardApp.controller('LBoardCtrl', function LBoardCtrl ($scope, $http) {
     $scope.getUsers();
 }
 
-leaderboardApp.directive('ghVisualization', function () {
-    var margin = 20,
-        width = 960,
-        height = 500 - .5 - margin,
-        color = d3.interpolateRgb("#f77", "#77f");
-
-    return
-    {
-        restrict: 'E',
-        scope: {
-            val: '=',
-            grouped: '='
-        },
-        link: function (scope, element, attrs) {
-            // set up initial svg object
-            var vis = d3.select(element[0])
-                .append("svg")
-                    .attr("width", width)
-                        .attr("height", height + margin + 100);
-
-            scope.$watch('val', function (newVal, oldVal) {
-
-                // clear the elements inside of the directive
-                vis.selectAll('*').remove();
-
-                // if 'val' is undefined, exit
-                if (!newVal) {
-                    return;
-                }
-
-                // Based on http://mbostock.github.com/d3/ex/stack.html
-                var n = newVal.length, // number of layers
-                    m = newVal[0].length, // number of samples per layer
-                    data = d3.layout.stack()(newVal);
-
-                var mx = m,
-                    my = d3.max(data, function (d) {
-                        return d3.max(d, function(d) {
-                            return d.y0 + d.y;
-                        });
-                    }),
-                    mz = d3.max(data, function (d) {
-                        return d3.max(d, function(d) {
-                            return d.y;
-                        });
-                    }),
-                    x = function (d) { return d.x * width / mx; },
-                    y0 = function (d) { return height - d.y0 * height / my; },
-                    y1 = function (d) { return height - (d.y + d.y0) * height / my; },
-                    y2 = function (d) { return d.y * height / mz; };
-                    // or `my` not rescale
-
-                // Layers for each color
-                // =====================
-
-                var layers = vis.selectAll("g.layer")
-                    .data(data)
-                    .enter().append("g")
-                    .style("fill", function (d, i) {
-                        return color(i / (n-1));
-                    })
-                    .attr("class", "layer");
-
-                // Bars
-                // ====
-
-                var bars = layers.selectAll("g.bar")
-                    .data(function(d) { return d; })
-                    .enter().append("g")
-                    .attr("class", "bar")
-                    .attr("transform", function(d) {
-                        return "translate(" + x(d) + ",0)";
-                    });
-
-                    bars.append("rect")
-                        .attr("width", x({x: .9}))
-                        .attr("x", 0)
-                        .attr("y", height)
-                        .attr("height", 0)
-                      .transition()
-                        .delay(function(d, i) { return i * 10; })
-                        .attr("y", y1)
-                        .attr("height", function(d) {
-                            return y0(d) - y1(d);
-                        });
-
-                // X-axis labels
-                // =============
-
-                var labels = vis.selectAll("text.label")
-                    .data(data[0])
-                  .enter().append("text")
-                    .attr("class", "label")
-                    .attr("x", x)
-                    .attr("y", height + 6)
-                    .attr("dx", x({x: .45}))
-                    .attr("dy", ".71em")
-                    .attr("text-anchor", "middle")
-                    .text(function(d, i) {
-                      return d.date;
-                  });
+leaderboardApp.directive('ghVisualization', function ($scope) {
+    var margin = { top: 50, right: 0, bottom: 100, left: 30 },
+      width = 960 - margin.left - margin.right,
+      height = 430 - margin.top - margin.bottom,
+      gridSize = Math.floor(width / 24),
+      legendElementWidth = gridSize*2,
+      buckets = 9,
+      colors = ["#EC6363","#BDEBCA"], // or ex: colorbrewer.YlGnBu[9]
+      days = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
+      users = $scope.users;
 
 
-                // Chart Key
-                // =========
+    var render = function (data) {
+      var colorScale = d3.scale.quantile()
+          .domain([0, buckets - 1, d3.max(data, function (d) { return d.value; })])
+          .range(colors);
 
-                var keyText = vis.selectAll("text.key")
-                    .data(data)
-                  .enter().append("text")
-                    .attr("class", "key")
-                    .attr("y", function (d, i) {
-                      return height + 42 + 30*(i%3);
-                    })
-                    .attr("x", function (d, i) {
-                      return 155 * Math.floor(i/3) + 15;
-                    })
-                    .attr("dx", x({x: .45}))
-                    .attr("dy", ".71em")
-                    .attr("text-anchor", "left")
-                    .text(function(d, i) {
-                      return d[0].user;
-                    });
+      var svg = d3.select("#leaderboard").append("svg")
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-                var keySwatches = vis.selectAll("rect.swatch")
-                    .data(data)
-                  .enter().append("rect")
-                    .attr("class", "swatch")
-                    .attr("width", 20)
-                    .attr("height", 20)
-                    .style("fill", function(d, i) {
-                      return color(i / (n - 1));
-                    })
-                    .attr("y", function (d, i) {
-                      return height + 36 + 30*(i%3);
-                    })
-                    .attr("x", function (d, i) {
-                      return 155 * Math.floor(i/3);
-                    });
+      var dayLabels = svg.selectAll(".dayLabel")
+          .data(days)
+          .enter().append("text")
+            .text(function (d) { return d; })
+            .attr("x", 0)
+            .attr("y", function (d, i) { return i * gridSize; })
+            .style("text-anchor", "end")
+            .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
+            .attr("class", function (d, i) { return ((i >= 0 && i <= 4) ? "dayLabel mono axis axis-workweek" : "dayLabel mono axis"); });
 
-                // Animate between grouped and stacked
-                // ===================================
+      var userLabels = svg.selectAll(".userLabel")
+          .data(times)
+          .enter().append("text")
+            .text(function(d) { return d; })
+            .attr("x", function(d, i) { return i * gridSize; })
+            .attr("y", 0)
+            .style("text-anchor", "middle")
+            .attr("transform", "translate(" + gridSize / 2 + ", -6)")
+            .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "userLabel mono axis axis-worktime" : "userLabel mono axis"); });
 
-                function transitionGroup() {
-                  vis.selectAll("g.layer rect")
-                    .transition()
-                      .duration(500)
-                      .delay(function(d, i) { return (i % m) * 10; })
-                      .attr("x", function(d, i) { return x({x: .9 * ~~(i / m) / n}); })
-                      .attr("width", x({x: .9 / n}))
-                      .each("end", transitionEnd);
+      var heatMap = svg.selectAll(".active")
+          .data(data)
+          .enter().append("rect")
+          .attr("x", function(d) { return (d.hour - 1) * gridSize; })
+          .attr("y", function(d) { return (d.day - 1) * gridSize; })
+          .attr("rx", 4)
+          .attr("ry", 4)
+          .attr("class", "active bordered")
+          .attr("width", gridSize)
+          .attr("height", gridSize)
+          .style("fill", colors[0]);
 
-                  function transitionEnd() {
-                    d3.select(this)
-                      .transition()
-                        .duration(500)
-                        .attr("y", function(d) { return height - y2(d); })
-                        .attr("height", y2);
-                  }
-                }
+      heatMap.transition().duration(1000)
+          .style("fill", function(d) { return colorScale(d.value); });
 
-                function transitionStack() {
-                  vis.selectAll("g.layer rect")
-                    .transition()
-                      .duration(500)
-                      .delay(function(d, i) { return (i % m) * 10; })
-                      .attr("y", y1)
-                      .attr("height", function(d) {
-                        return y0(d) - y1(d);
-                      })
-                      .each("end", transitionEnd);
+      heatMap.append("title").text(function(d) { return d.value; });
 
-                  function transitionEnd() {
-                    d3.select(this)
-                      .transition()
-                        .duration(500)
-                        .attr("x", 0)
-                        .attr("width", x({x: .9}));
-                  }
-                }
+      var legend = svg.selectAll(".legend")
+          .data([0].concat(colorScale.quantiles()), function(d) { return d; })
+          .enter().append("g")
+          .attr("class", "legend");
 
-                // reset grouped state to false
-                scope.grouped = false;
+      legend.append("rect")
+        .attr("x", function(d, i) { return legendElementWidth * i; })
+        .attr("y", height)
+        .attr("width", legendElementWidth)
+        .attr("height", gridSize / 2)
+        .style("fill", function(d, i) { return colors[i]; });
 
-                // setup a watch on 'grouped' to switch between views
-                scope.$watch('grouped', function (newVal, oldVal) {
-                  // ignore first call which happens before we even have data from the Github API
-                  if (newVal === oldVal) {
-                    return;
-                  }
-                  if (newVal) {
-                    transitionGroup();
-                  } else {
-                    transitionStack();
-                  }
-                });
-            });
-        }
+      legend.append("text")
+        .attr("class", "mono")
+        .text(function(d) { return "≥ " + Math.round(d); })
+        .attr("x", function(d, i) { return legendElementWidth * i; })
+        .attr("y", height + gridSize);
     }
+
+    render($scope.data);
 });
