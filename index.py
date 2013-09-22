@@ -301,8 +301,15 @@ class UpdateHandler(BaseHandler):
 class ActivityHandler(BaseHandler):
     @tornado.web.asynchronous
     def get(self):
+        today = datetime.datetime.now()
+        # find POSIX time for next Saturday
+        next_saturday = self.next_weekday(today, 5)
+        upper_time_bound = calendar.timegm(next_saturday.utctimetuple())
+        # subtract 7 days to it for your lower bound
+        last_saturday = next_saturday - datetime.timedelta(days=7)
+        lower_time_bound = calendar.timegm(last_saturday.utctimetuple())
         # only get activities from THIS week
-        self.db.activities.find({}, callback=self._on_find)
+        self.db.activities.find({'day': {'$gte':lower_time_bound, '$lt':upper_time_bound}}, callback=self._on_find)
 
     def post(self):
       name = self.get_argument('name', 'no data')
@@ -310,6 +317,12 @@ class ActivityHandler(BaseHandler):
       duration = self.get_argument('duration', 'no data')
       date_logged = self.get_argument('day', 'no data')
       self.db.activities.save({'name':name,'activity':activity_name,'duration':duration,'day':date_logged}, callback=self._on_save)
+
+    def next_weekday(self, d, weekday):
+      days_ahead = weekday - d.weekday()
+      if days_ahead <= 0: # Target day already happened this week
+          days_ahead += 7
+      return d + datetime.timedelta(days_ahead)
 
     def _on_save(self, response = False, error = False):
         if error:
