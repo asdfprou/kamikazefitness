@@ -73,7 +73,8 @@ class Application(tornado.web.Application):
             (r"/test", TestHandler),
             (r"/update", UpdateHandler),
             (r"/activity", ActivityHandler),
-            (r"/user", UserHandler)
+            (r"/user", UserHandler),
+            (r"/data", DataHandler)
         ]
         settings = dict(
             cookie_secret="/Vo=",
@@ -331,6 +332,23 @@ class UserHandler(BaseHandler):
                     del obj['_id']
                 result.append(obj)
             self.write(tornado.escape.json_encode({"data": result}))
+            self.finish()
+
+class DataHandler(BaseHandler):
+    @tornado.web.asynchronous
+    def get(self):
+        self.db.users.find({}, callback=self._on_data)
+
+    def _on_data(self, response = False, error = False):
+        if error:
+            print error
+        else:
+            result = []
+            for user in response:
+                del(user["_id"])
+                result.append(user)
+
+            self.write(tornado.escape.json_encode(result))
             self.finish()
 
 class CronHandler(BaseHandler):

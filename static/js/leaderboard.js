@@ -1,53 +1,11 @@
-var leaderboardApp = angular.module('leaderboard', ['angular-underscore/filters', 'angularMoment', 'd3']);
+function LBoardCtrl($scope, $http) {
 
-leaderboardApp.controller('LBoardCtrl', function LBoardCtrl($scope, $http) {
-    // helper for formatting date
-    var getActivityValue = function (date) {
-      // Need to fill in to determine colour of cell after a certain ate
-    }
+   // helper for formatting date
+  var getActivityValue = function (date) {
+    // Need to fill in to determine colour of cell after a certain ate
+  }
 
-    $scope.getUsers = function (cb) {
-        $http({
-            method: 'GET',
-            url: '/user'
-        }).
-        success(function (data) {
-            $scope.users = _.pluck(JSON.parse(data), 'name');
-            $scope.error = '';
-            cb($scope.users, $http);
-        }).
-        error(function (data, status) {
-            if (status === 404) {
-                $scope.error = 'No users to be found here!';
-            } else {
-                $scope.error = 'Error: ' + status;
-            }
-        })
-    }
-
-    $scope.getUsers(function (users, $http) {
-        $http({
-            method: 'GET',
-            url: '/activity'
-        }).
-        success(function (activities) {
-           $scope.data = _.map(activities, function(activity) {
-             activity['day'] = moment(activity['day']).format("dddd");
-             activity['value'] = 1;
-           });
-        }).
-        error(function (activities, status) {
-            if (status === 404) {
-                $scope.error = 'No activities to be found here!';
-            } else {
-                $scope.error = 'Error: ' + status;
-            }
-        })
-    });
-});
-
-leaderboardApp.directive('ghVisualization', function ($scope) {
-  d3.json("static/js/data.json", function(error, json) {
+  $scope.render = function () {
     var margin = { top: 50, right: 0, bottom: 150, left: 30 },
       width = 400 - margin.left - margin.right,
       height = 600 - margin.top - margin.bottom,
@@ -55,17 +13,17 @@ leaderboardApp.directive('ghVisualization', function ($scope) {
       days = ["Sa", "Su", "Mo", "Tu", "We", "Th", "Fr"],
       gridSize = Math.floor(width / users.length),
       legendElementWidth = gridSize,
-      colors = ["#D0CCC0", "#DFD487","#EC6363","#BDEBCA"]; // or ex: colorbrewer.YlGnBu[9]
-
+      colors = ["#D0CCC0", "#DFD487","#BDEBCA","#EC6363"]; // or ex: colorbrewer.YlGnBu[9]
+      
       //users = $scope.users;
       //data = $scope.data;
-    var data = json;
+    var data = $scope.data;
 
     var activityScale = d3.scale.ordinal()
         .domain(["filler","na", "active", "inactive"])
         .range(colors);
 
-    var svg = d3.select("#leaderboard").append("svg")
+    var svg = d3.select("#chart").append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
         .append("g")
@@ -125,5 +83,47 @@ leaderboardApp.directive('ghVisualization', function ($scope) {
       .text(function(d) { return d; })
       .attr("x", function(d, i) { return legendElementWidth * i; })
       .attr("y", height + gridSize);
-  });
-});
+  }
+
+  $scope.getUsers = function (cb) {
+      $http({
+          method: 'GET',
+          url: '/user'
+      }).
+      success(function (data) {
+        $scope.users = _.pluck(data.data, 'name');
+        $scope.error = '';
+        cb($scope.users, $http);
+      }).
+      error(function (data, status) {
+          if (status === 404) {
+              $scope.error = 'No users to be found here!';
+          } else {
+              $scope.error = 'Error: ' + status;
+          }
+      })
+  }
+
+  $scope.getUsers(function (users, $http) {
+      $http({
+          method: 'GET',
+          url: '/activity'
+      }).
+      success(function (activities) {
+          console.log(Date.create(1379351532).format('{Weekday}'));
+         $scope.data = _.map(activities.data, function(activity) {
+           activity['day'] = moment(activity['day']).format("dd");
+           activity['value'] = activity.duration > 0 ? "active" : "inactive";
+           return activity;
+         });
+         $scope.render()
+      }).
+      error(function (activities, status) {
+          if (status === 404) {
+              $scope.error = 'No activities to be found here!';
+          } else {
+              $scope.error = 'Error: ' + status;
+          }
+      });
+  }); 
+}
