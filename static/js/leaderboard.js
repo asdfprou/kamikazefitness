@@ -2,14 +2,15 @@ var leaderboardApp = angular.module('leaderboard', ['angular-underscore/filters'
 
 leaderboardApp.controller('LBoardCtrl', function LBoardCtrl($scope, $http) {
     // helper for formatting date
-    $scope.getUsers = function () {
+    $scope.getUsers = function (cb) {
         $http({
             method: 'GET',
-            url: '/user/findAll'
+            url: '/user'
         }).
         success(function (data) {
             $scope.users = _.pluck(JSON.parse(data), 'name');
             $scope.error = '';
+            cb($scope.users, $http);
         }).
         error(function (data, status) {
             if (status === 404) {
@@ -20,7 +21,22 @@ leaderboardApp.controller('LBoardCtrl', function LBoardCtrl($scope, $http) {
         })
     }
 
-    $scope.getUsers();
+    $scope.getUsers(function (users, $http) {
+        $http({
+            method: 'GET',
+            url: '/activity'
+        }).
+        success(function (data) {
+
+        }).
+        error(function (data, status) {
+            if (status === 404) {
+                $scope.error = 'No activities to be found here!';
+            } else {
+                $scope.error = 'Error: ' + status;
+            }
+        })
+    });
 });
 
 leaderboardApp.directive('ghVisualization', function ($scope) {
@@ -29,15 +45,15 @@ leaderboardApp.directive('ghVisualization', function ($scope) {
       height = 430 - margin.top - margin.bottom,
       gridSize = Math.floor(width / 24),
       legendElementWidth = gridSize*2,
-      buckets = 9,
-      colors = ["#EC6363","#BDEBCA", "#DFD487"], // or ex: colorbrewer.YlGnBu[9]
-      days = ["Sa", "Su", "Mo", "Tu", "We", "Th", "Fr"],
+      colors = ["#D0CCC0", "#DFD487","#EC6363","#BDEBCA"], // or ex: colorbrewer.YlGnBu[9]
+      days = ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
       users = $scope.users;
+      data = $scope.data;
 
 
     var render = function (data) {
       var activityScale = d3.scale.ordinal()
-          .domain(["active", "inactive", "na"])
+          .domain(["filler","na", "active", "inactive"])
           .range(colors);
 
       var svg = d3.select("#leaderboard").append("svg")
@@ -54,37 +70,37 @@ leaderboardApp.directive('ghVisualization', function ($scope) {
             .attr("y", function (d, i) { return i * gridSize; })
             .style("text-anchor", "end")
             .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
-            .attr("class", function (d, i) { return ((i >= 0 && i <= 4) ? "dayLabel mono axis axis-workweek" : "dayLabel mono axis"); });
+            .attr("class", "dayLabel mono axis");
 
       var userLabels = svg.selectAll(".userLabel")
-          .data(times)
+          .data(users)
           .enter().append("text")
             .text(function(d) { return d; })
             .attr("x", function(d, i) { return i * gridSize; })
             .attr("y", 0)
             .style("text-anchor", "middle")
             .attr("transform", "translate(" + gridSize / 2 + ", -6)")
-            .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "userLabel mono axis axis-worktime" : "userLabel mono axis"); });
+            .attr("class", "userLabel mono axis");
 
-      var heatMap = svg.selectAll(".active")
+      var heatMap = svg.selectAll(".activity")
           .data(data)
           .enter().append("rect")
-          .attr("x", function(d) { return (d.hour - 1) * gridSize; })
-          .attr("y", function(d) { return (d.day - 1) * gridSize; })
+          .attr("x", function(d) { return users.indexOf(d.user); })
+          .attr("y", function(d) { return days.indexOf(d.day); })
           .attr("rx", 4)
           .attr("ry", 4)
-          .attr("class", "active bordered")
+          .attr("class", "activity bordered")
           .attr("width", gridSize)
           .attr("height", gridSize)
           .style("fill", colors[0]);
 
       heatMap.transition().duration(1000)
-          .style("fill", function(d) { return colorScale(d.value); });
+          .style("fill", function(d) { return activityScale(d.value); });
 
       heatMap.append("title").text(function(d) { return d.value; });
 
       var legend = svg.selectAll(".legend")
-          .data([0].concat(colorScale.quantiles()), function(d) { return d; })
+          .data(activityScale.domain(), function(d) { return d; })
           .enter().append("g")
           .attr("class", "legend");
 

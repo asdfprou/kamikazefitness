@@ -288,8 +288,10 @@ class UserHandler(BaseHandler):
         else:
             result = []
             for obj in response:
+                if '_id' in obj:
+                    del obj['_id']
                 result.append(obj)
-            self.write(str({"data": result}))
+            self.write(tornado.escape.json_encode({"data": result}))
             self.finish()
 
 class CronHandler(BaseHandler):
