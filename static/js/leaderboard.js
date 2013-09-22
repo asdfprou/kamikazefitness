@@ -1,22 +1,14 @@
-var leaderboardApp = angular.module('leaderboard', []);
+var leaderboardApp = angular.module('leaderboard', ['angular-underscore/filters', 'angularMoment']);
 
-leaderboardApp.controller('LBoardCtrl', function LBoardCtrl ($scope, $http) {
+leaderboardApp.controller('LBoardCtrl', function LBoardCtrl($scope, $http) {
     // helper for formatting date
-    var humanReadableDate = function (d) {
-        return d.getUTCMonth() + '/' + d.getUTCDate();
-    };)})
-
-    var users = db.users.find({});
-
-    console.log(users);
-
     $scope.getUsers = function () {
         $http({
             method: 'GET',
             url: '/user/findAll'
         }).
         success(function (data) {
-            $scope.users = JSON.parse(data);
+            $scope.users = _.pluck(JSON.parse(data), 'name');
             $scope.error = '';
         }).
         error(function (data, status) {
@@ -29,7 +21,7 @@ leaderboardApp.controller('LBoardCtrl', function LBoardCtrl ($scope, $http) {
     }
 
     $scope.getUsers();
-}
+});
 
 leaderboardApp.directive('ghVisualization', function ($scope) {
     var margin = { top: 50, right: 0, bottom: 100, left: 30 },
@@ -38,14 +30,14 @@ leaderboardApp.directive('ghVisualization', function ($scope) {
       gridSize = Math.floor(width / 24),
       legendElementWidth = gridSize*2,
       buckets = 9,
-      colors = ["#EC6363","#BDEBCA"], // or ex: colorbrewer.YlGnBu[9]
-      days = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
+      colors = ["#EC6363","#BDEBCA", "#DFD487"], // or ex: colorbrewer.YlGnBu[9]
+      days = ["Sa", "Su", "Mo", "Tu", "We", "Th", "Fr"],
       users = $scope.users;
 
 
     var render = function (data) {
-      var colorScale = d3.scale.quantile()
-          .domain([0, buckets - 1, d3.max(data, function (d) { return d.value; })])
+      var activityScale = d3.scale.ordinal()
+          .domain(["active", "inactive", "na"])
           .range(colors);
 
       var svg = d3.select("#leaderboard").append("svg")
