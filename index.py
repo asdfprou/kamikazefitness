@@ -202,9 +202,9 @@ class LogoutHandler(BaseHandler):
 class MainHandler(BaseHandler):
     @tornado.web.asynchronous
     def get(self):
+        
         self.id = self.get_secure_cookie("user")
-        if not self.id and self.root != "http://localhost:8888": self.id = self.get_argument("id", False)
-        if self.get_argument("id", False) and self.root != "http://localhost:8888": self.set_secure_cookie("user", self.id)
+        if self.get_argument("id", False) : self.set_secure_cookie("user", self.id)
         self.games = []
         print self.id
         if self.id:
