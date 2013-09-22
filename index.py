@@ -16,6 +16,7 @@ from tornado.options import define, options
 
 import math
 
+import calendar
 import datetime
 import time
 from time import time
@@ -243,7 +244,27 @@ class MainHandler(BaseHandler):
 class TestHandler(BaseHandler):
     @tornado.web.asynchronous
     def get(self):
-        self.db.users.find({}, callback=self._on_find)
+      self._populate_activities()
+
+    def _populate_activities(self):
+      entity_id = 0
+      for i in range(0,4):
+        i = i + 1
+        for j in range(0,4):
+          random_date = datetime.datetime.now() + datetime.timedelta(days=j)
+          self.db.activities.save({"id":entity_id, "name":'user'+str(i), 'activity':'running', 'duration':30, 'day':calendar.timegm(random_date.utctimetuple())},callback=self._on_add)
+          entity_id = entity_id + 1
+
+    def _populate_users(self):
+      for i in range(0,9):
+        self.db.users.save({"name":'user'+str(i), "id":i}, callback=self._on_add)
+
+    def _on_add(self, response=False, error=False):
+      if error:
+        print error
+      else:
+        self.write("success")
+        self.finish()
 
     def _on_find(self, response = False, error = False):
         result = []
