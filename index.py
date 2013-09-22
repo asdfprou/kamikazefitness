@@ -3,7 +3,7 @@
 # Created by Jon H.M. Chan
 # me [at] jonhmchan [dot] com
 
-# This software is free to use under the MIT License. 
+# This software is free to use under the MIT License.
 
 import logging
 import tornado.auth
@@ -49,7 +49,7 @@ define("port", default=8888, help="run on the given port", type=int)
 
 # SSH
 # Sometimes you'll get an RSA fingerprint error when you try to push to heroku
-# Make sure that 
+# Make sure that
 # =======================================================================
 # ssh-keygen -t rsa -C "youremail@somewhere.com" -f  ~/.ssh/id_rsa_heroku
 # ssh-add ~/.ssh/id_rsa_heroku
@@ -70,7 +70,8 @@ class Application(tornado.web.Application):
             (r"/facebook", FacebookHandler),
             (r"/logout", LogoutHandler),
             (r"/test", TestHandler),
-            (r"/update", UpdateHandler)
+            (r"/update", UpdateHandler),
+            (r"/user", UserHandler)
         ]
         settings = dict(
             cookie_secret="/Vo=",
@@ -274,6 +275,22 @@ class UpdateHandler(BaseHandler):
     def _on_finish(self, response = False, error = False):
         self.write("Finished updating")
         self.finish()
+
+class UserHandler(BaseHandler):
+    @tornado.web.asynchronous
+    def get(self):
+        self.db.users.find({}, callback=self._on_find)
+
+    def _on_find(self, response = False, error = False):
+        if error:
+            print "ERROR"
+            print error
+        else:
+            result = []
+            for obj in response:
+                result.append(obj)
+            self.write(str({"data": result}))
+            self.finish()
 
 class CronHandler(BaseHandler):
     response = {}

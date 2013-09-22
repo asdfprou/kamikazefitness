@@ -92,22 +92,52 @@ textarea {
 /* ==========================================================================
    Author's custom styles
    ========================================================================== */
+html {
+    height: 100%;
+}
 
+body {
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAZCAIAAABLixI0AAAAOElEQVQ4y2N4Qz3AAMSfP73DJCEIPxuNZBh112Bz14cPEISPjdVdg9Ws0fAaDa8hHF6j5dcQcxcA3DHODs/IAR8AAAAASUVORK5CYII=);
+    text-rendering: optimizeLegibility;
+}
 
+#leaderboard {
+    font: 14px Helvetica Neue;
+    text-rendering: optimizeLegibility;
+    margin-top: 1em;
+    overflow-y: scroll;
+    width: 970px;
+    margin: auto;
+}
 
+.label {
+    font-size: .65em;
+}
 
+h1 {
+    font-size: 36px;
+    font-weight: 300;
+    margin-bottom: .3em;
+}
 
+.error {
+    color: red;
+}
 
+#wrapper {
+    background-color: #333;
+    height: 100%;
+    width: 70%;
+    margin: 0 auto;
+}
 
-
-
-
-
-
-
-
-
-
+header {
+    color: #FFF;
+    text-align: center;
+    padding: 10px;
+    margin: 0 auto;
+    font-size: 1.5em;
+}
 
 /* ==========================================================================
    Helper classes
