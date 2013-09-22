@@ -304,6 +304,22 @@ class ActivityHandler(BaseHandler):
         # only get activities from THIS week
         self.db.activities.find({}, callback=self._on_find)
 
+    def post(self):
+      name = self.get_argument('name', 'no data')
+      activity_name = self.get_argument('activity_name', 'no data')
+      duration = self.get_argument('duration', 'no data')
+      date_logged = self.get_argument('day', 'no data')
+      self.db.activities.save({'name':name,'activity':activity_name,'duration':duration,'day':date_logged}, callback=self._on_save)
+
+    def _on_save(self, response = False, error = False):
+        if error:
+            print "ERROR"
+            print error
+        else:
+            print "SUCCESS"
+            self.write('success')
+            self.finish()
+
     def _on_find(self, response = False, error = False):
         if error:
             print "ERROR"
@@ -319,6 +335,19 @@ class UserHandler(BaseHandler):
     @tornado.web.asynchronous
     def get(self):
         self.db.users.find({}, callback=self._on_find)
+
+    def post(self):
+      name = self.get_argument('name', 'no data')
+      self.db.users.save({'name':name}, callback=self._on_save)
+
+    def _on_save(self, response = False, error = False):
+        if error:
+            print "ERROR"
+            print error
+        else:
+            print "SUCCESS"
+            self.write('success')
+            self.finish()
 
     def _on_find(self, response = False, error = False):
         if error:
